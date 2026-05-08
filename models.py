@@ -180,13 +180,21 @@ class VAE(nn.Module):
             fc_layers_dim=out_fc_features
         )
 
+    def encode(self, x):
+        mu, logvar = self.encoder(x)
+        return mu, logvar
+
+    def decode(self, z):
+        recon_x = self.decoder(z)
+        return recon_x
+
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + eps * std
 
     def forward(self, x):
-        mu, logvar = self.encoder(x)
+        mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
-        recon_x = self.decoder(z)
+        recon_x = self.decode(z)
         return recon_x, mu, logvar, z
