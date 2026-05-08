@@ -152,8 +152,6 @@ class Decoder(nn.Module):
         x = self.conv_transpose_layers(x)
         return x
 
-# Building the VAE
-
 
 class VAE(nn.Module):
     def __init__(self, input_channels=1, latent_dim=10, hidden_channels=None,
@@ -198,3 +196,18 @@ class VAE(nn.Module):
         z = self.reparameterize(mu, logvar)
         recon_x = self.decode(z)
         return recon_x, mu, logvar, z
+
+
+class MLPDiscriminator(nn.Module):
+    def __init__(self, latent_dim, hidden_dim=128):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(latent_dim, hidden_dim),
+            nn.LeakyReLU(0.2),  # Avoids dead neurons and helps with gradient flow
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.LeakyReLU(0.2),  # Same as above
+            nn.Linear(hidden_dim, 1),  # No softmax here, as we'll use BCEWithLogitsLoss which applies it internally
+        )
+
+    def forward(self, z):
+        return self.model(z).squeeze(-1)  # Squeeze to get shape (batch_size,) for binary classification
